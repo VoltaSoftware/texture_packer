@@ -8,6 +8,7 @@ use crate::{
 use std::cmp::min;
 use std::collections::HashMap;
 use std::hash::Hash;
+use image::{DynamicImage, ImageBuffer, Rgba};
 
 pub type PackResult<T> = Result<T, PackError>;
 
@@ -135,6 +136,43 @@ impl<'a, Pix: Pixel, T: Clone + Texture<Pixel = Pix>, K: Clone + Eq + Hash>
             }
         }
         None
+    }
+}
+
+impl<'a, T: Clone + Texture<Pixel = Rgba<u8>>, K: Clone + Eq + Hash>
+TexturePacker<'a, T, K>
+{
+    /// Export a texture to an image type.
+    ///
+    pub fn quick_export(&self) -> DynamicImage {
+        let mut buffer = ImageBuffer::<Rgba<u8>, Vec<u8>>::new(self.width(), self.height());
+
+        for (_, frame) in self.get_frames() {
+            if let Some(texture) = self.textures.get(&frame.key) {
+                for image_x in frame.frame.x..frame.frame.x+frame.frame.w {
+                    for image_y in frame.frame.y..frame.frame.y + frame.frame.h {
+                        let texture_relative_x = image_x.saturating_sub(frame.frame.x);
+                        let texture_relative_y = image_y.saturating_sub(frame.frame.y);
+
+                        let pixel: Option<Rgba<u8>> = if frame.rotated {
+                            let x = min(texture_relative_x, texture.height() - 1);
+                            let y = min(texture_relative_y, texture.width() - 1);
+                            texture.get_rotated(x, y)
+                        } else {
+                            let x = min(texture_relative_x, texture.width() - 1);
+                            let y = min(texture_relative_y, texture.height() - 1);
+                            texture.get(x, y)
+                        };
+
+                        let pixel = pixel.unwrap_or(Rgba([0, 0, 0, 0]));
+
+                        buffer.put_pixel(image_x, image_y, pixel);
+                    }
+                }
+            }
+        }
+
+        DynamicImage::ImageRgba8(buffer)
     }
 }
 
