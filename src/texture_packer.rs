@@ -5,10 +5,10 @@ use crate::{
     texture::{Pixel, SubTexture, Texture},
     texture_packer_config::TexturePackerConfig,
 };
+use image::{DynamicImage, ImageBuffer, Rgba};
 use std::cmp::min;
 use std::collections::HashMap;
 use std::hash::Hash;
-use image::{DynamicImage, ImageBuffer, Rgba};
 
 pub type PackResult<T> = Result<T, PackError>;
 
@@ -139,18 +139,31 @@ impl<'a, Pix: Pixel, T: Clone + Texture<Pixel = Pix>, K: Clone + Eq + Hash>
     }
 }
 
-impl<'a, T: Clone + Texture<Pixel = Rgba<u8>>, K: Clone + Eq + Hash>
-TexturePacker<'a, T, K>
-{
+impl<'a, T: Clone + Texture<Pixel = Rgba<u8>>, K: Clone + Eq + Hash> TexturePacker<'a, T, K> {
     /// Export a texture to an image type.
     ///
     pub fn quick_export(&self) -> DynamicImage {
         let mut buffer = ImageBuffer::<Rgba<u8>, Vec<u8>>::new(self.width(), self.height());
 
+        let extrusion = self.config.texture_extrusion;
+
         for (_, frame) in self.get_frames() {
             if let Some(texture) = self.textures.get(&frame.key) {
-                for image_x in frame.frame.x..frame.frame.x+frame.frame.w {
-                    for image_y in frame.frame.y..frame.frame.y + frame.frame.h {
+                let mut rect = frame.frame;
+
+                rect.x = rect.x.saturating_sub(extrusion);
+                rect.y = rect.y.saturating_sub(extrusion);
+
+                rect.w += extrusion * 2;
+                rect.h += extrusion * 2;
+
+                let start_x = rect.x;
+                let start_y = rect.y;
+                let end_x = start_x + rect.w;
+                let end_y = start_y + rect.h;
+
+                for image_x in start_x..end_x {
+                    for image_y in start_y..end_y {
                         let texture_relative_x = image_x.saturating_sub(frame.frame.x);
                         let texture_relative_y = image_y.saturating_sub(frame.frame.y);
 
@@ -164,7 +177,13 @@ TexturePacker<'a, T, K>
                             texture.get(x, y)
                         };
 
-                        let pixel = pixel.unwrap_or(Rgba([0, 0, 0, 0]));
+                        let pixel = if self.config.texture_outlines
+                            && frame.frame.is_outline(image_x, image_y)
+                        {
+                            <Rgba<u8> as Pixel>::outline()
+                        } else {
+                            pixel.expect("This should always have a result")
+                        };
 
                         buffer.put_pixel(image_x, image_y, pixel);
                     }
@@ -185,7 +204,7 @@ where
 
     fn width(&self) -> u32 {
         if self.config.force_max_dimensions {
-            return self.config.max_width
+            return self.config.max_width;
         }
 
         let mut right = None;
@@ -209,7 +228,7 @@ where
 
     fn height(&self) -> u32 {
         if self.config.force_max_dimensions {
-            return self.config.max_height
+            return self.config.max_height;
         }
 
         let mut bottom = None;
