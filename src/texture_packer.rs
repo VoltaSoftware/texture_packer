@@ -167,10 +167,6 @@ impl<'a, T: Clone + Texture<Pixel = Rgba<u8>>, K: Clone + Eq + Hash> TexturePack
                         let texture_relative_x = image_x.saturating_sub(frame.frame.x);
                         let texture_relative_y = image_y.saturating_sub(frame.frame.y);
 
-                        if image_x == 0 && image_y == 0 {
-                            println!("Rect {rect:?} ex={end_x} ey={end_y} tx={texture_relative_x} ty={texture_relative_y}")
-                        }
-
                         let pixel: Option<Rgba<u8>> = if frame.rotated {
                             let x = min(texture_relative_x, texture.height() - 1);
                             let y = min(texture_relative_y, texture.width() - 1);
