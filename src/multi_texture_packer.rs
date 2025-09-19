@@ -76,8 +76,6 @@ mod tests {
             max_width: 1,
             max_height: 1,
             allow_rotation: false,
-            border_padding: 0,
-            texture_padding: 0,
             texture_extrusion: 0,
             trim: false,
             texture_outlines: false,

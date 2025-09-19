@@ -3,9 +3,7 @@ use std::default::Default;
 /// Configuration for a texture packer.
 #[derive(Debug, Copy, Clone)]
 pub struct TexturePackerConfig {
-    //
     // layout configuration
-    //
     /// Max width of the packed image. Default value is `1024`.
     pub max_width: u32,
     /// Max height of the packed image. Default value is `1024`.
@@ -18,14 +16,10 @@ pub struct TexturePackerConfig {
     /// leaving potentially much unused space on the texture.
     pub force_max_dimensions: bool,
 
-    //
     // texture configuration
-    //
-    /// Size of the padding on the outer edge of the packed image in pixel. Default value is `0`.
-    pub border_padding: u32,
-    /// Size of the padding between frames in pixel. Default value is `2`
-    pub texture_padding: u32,
     /// Size of the repeated pixels at the border of each image. Default value is `0`.
+    /// This is used both to extrude pixels on all sides (left/right/top/bottom)
+    /// and to reserve spacing between adjacent textures so extrusion areas do not overlap.
     pub texture_extrusion: u32,
 
     /// True to trim the empty pixels of the input images. Default value is `true`.
@@ -44,8 +38,7 @@ impl Default for TexturePackerConfig {
             allow_rotation: true,
 
             force_max_dimensions: false,
-            border_padding: 0,
-            texture_padding: 2,
+
             texture_extrusion: 0,
 
             trim: true,

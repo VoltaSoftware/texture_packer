@@ -21,7 +21,7 @@ fn main() {
         max_height: 400,
         allow_rotation: false,
         texture_outlines: true,
-        border_padding: 2,
+        texture_extrusion: 2, // replaces border_padding; duplicates edge pixels by 2
         force_max_dimensions: false,
         ..Default::default()
     };

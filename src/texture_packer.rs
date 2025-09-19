@@ -63,8 +63,7 @@ impl<'a, Pix: Pixel, T: Clone + Texture<Pixel = Pix>, K: Clone + Eq + Hash>
         let texture = SubTexture::from_ref(texture, source);
         let rect = (&texture).into();
         if let Some(mut frame) = self.packer.pack(key.clone(), &rect) {
-            frame.frame.x += self.config.border_padding;
-            frame.frame.y += self.config.border_padding;
+            // frame.frame.x/y remain the inner (non-extruded) top-left
             frame.trimmed = self.config.trim;
             frame.source = source;
             frame.source.w = w;
@@ -91,8 +90,7 @@ impl<'a, Pix: Pixel, T: Clone + Texture<Pixel = Pix>, K: Clone + Eq + Hash>
         let texture = SubTexture::new(texture, source);
         let rect = (&texture).into();
         if let Some(mut frame) = self.packer.pack(key.clone(), &rect) {
-            frame.frame.x += self.config.border_padding;
-            frame.frame.y += self.config.border_padding;
+            // frame.frame.x/y remain the inner (non-extruded) top-left
             frame.trimmed = self.config.trim;
             frame.source = source;
             frame.source.w = w;
@@ -220,7 +218,8 @@ where
         }
 
         if let Some(right) = right {
-            right + 1 + self.config.border_padding
+            // include right-side extrusion margin
+            right + 1 + self.config.texture_extrusion
         } else {
             0
         }
@@ -244,7 +243,8 @@ where
         }
 
         if let Some(bottom) = bottom {
-            bottom + 1 + self.config.border_padding
+            // include bottom-side extrusion margin
+            bottom + 1 + self.config.texture_extrusion
         } else {
             0
         }

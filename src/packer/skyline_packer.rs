@@ -142,8 +142,9 @@ impl<K> Packer<K> for SkylinePacker {
         let mut width = texture_rect.w;
         let mut height = texture_rect.h;
 
-        width += self.config.texture_padding + self.config.texture_extrusion * 2;
-        height += self.config.texture_padding + self.config.texture_extrusion * 2;
+        // Reserve space for extrusion on all sides
+        width += self.config.texture_extrusion * 2;
+        height += self.config.texture_extrusion * 2;
 
         if let Some((i, mut rect)) = self.find_skyline(width, height) {
             self.split(i, &rect);
@@ -151,8 +152,11 @@ impl<K> Packer<K> for SkylinePacker {
 
             let rotated = width != rect.w;
 
-            rect.w -= self.config.texture_padding + self.config.texture_extrusion * 2;
-            rect.h -= self.config.texture_padding + self.config.texture_extrusion * 2;
+            // Adjust inner frame to sit inside the reserved extrusion margin
+            rect.x += self.config.texture_extrusion;
+            rect.y += self.config.texture_extrusion;
+            rect.w -= self.config.texture_extrusion * 2;
+            rect.h -= self.config.texture_extrusion * 2;
 
             Some(Frame {
                 key,
@@ -173,8 +177,8 @@ impl<K> Packer<K> for SkylinePacker {
 
     fn can_pack(&self, texture_rect: &Rect) -> bool {
         if let Some((_, rect)) = self.find_skyline(
-            texture_rect.w + self.config.texture_padding + self.config.texture_extrusion * 2,
-            texture_rect.h + self.config.texture_padding + self.config.texture_extrusion * 2,
+            texture_rect.w + self.config.texture_extrusion * 2,
+            texture_rect.h + self.config.texture_extrusion * 2,
         ) {
             let skyline = Skyline {
                 x: rect.left(),
